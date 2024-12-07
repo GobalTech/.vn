@@ -1,24 +1,275 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
- 
- <label style="font-size: 30px; color: dark; position: absolute; top: 0px; left: 0%;">GobalTech - Hack</label>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalTech.Github.io</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
 
-<label style="font-size: 20px; color: blue; position: absolute; top: 50px; left: 0%;">By: Min Hub
-Game: Blox Fruit</label>
+        #countdown {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 20px;
+        }
 
-<textarea style="font-size: 15px; color: darkgreen; width: 355px; height: 100px; position: absolute; top: 70px; left: 0%;" readonly>loadstring(game:HttpGet("https://raw.githubusercontent.com/Basicallyybeta/YT_MinGaming/refs/heads/main/mingamingkaitunnew"))()</textarea>
+        #key-container {
+            display: none;
+            margin-top: 20px;
+        }
 
-<label style="font-size: 20px; color: blue; position: absolute; top: 180px; left: 0%;"> By: SpeedHub Game: Blox Fruit</label>
+        #key {
+            font-size: 18px;
+            padding: 10px;
+            width: 200px;
+        }
 
-<textarea style="font-size: 15px; color: darkgreen; width: 355px; height: 100px; position: absolute; top: 205px; left: 0%;" readonly>loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()</textarea>
+        #get-key-button, #copy-button, #reset-time-button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
 
-<label style="font-size: 35px; color: darkred; position: absolute; top: 320px; left: 0%;">Update More Script.....</label>
+        #get-key-button:disabled {
+            background-color: #ddd;
+        }
 
+        #history {
+            margin-top: 30px;
+            text-align: left;
+            font-size: 16px;
+        }
+
+        #history div {
+            margin-bottom: 15px;
+        }
+
+        #password-dialog {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        #password-dialog input {
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        #password-dialog button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #password-dialog button:disabled {
+            background-color: #ddd;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
 </head>
 <body>
+    <h1>GlobalTech.Github.io</h1>
+    <div id="countdown"></div>
+    <button id="get-key-button" onclick="startCooldown()">Get Key</button>
+    <button id="reset-time-button" onclick="showPasswordDialog()">Xóa Thời Gian</button>
+    
+    <div id="key-container">
+        <input type="text" id="key" readonly>
+        <button id="copy-button" onclick="copyKey()">Copy</button>
+    </div>
 
+    <div id="history">
+        <h3>Lịch Sử Get Key</h3>
+    </div>
+
+    <!-- Dialog nhập mật khẩu -->
+    <div id="overlay"></div>
+    <div id="password-dialog">
+        <h3>Nhập Mật Khẩu</h3>
+        <input type="password" id="password-input" placeholder="Nhập mật khẩu">
+        <button onclick="validatePassword()">Xác Nhận</button>
+    </div>
+
+    <script>
+        const countdownElement = document.getElementById('countdown');
+        const getKeyButton = document.getElementById('get-key-button');
+        const keyContainer = document.getElementById('key-container');
+        const keyInput = document.getElementById('key');
+        const historyElement = document.getElementById('history');
+        const resetTimeButton = document.getElementById('reset-time-button');
+        const passwordDialog = document.getElementById('password-dialog');
+        const overlay = document.getElementById('overlay');
+
+        const correctPassword = 'AdminKeyTime';
+        let cooldownTimer;
+
+        // Kiểm tra thời gian cooldown từ localStorage
+        function checkCooldown() {
+            const lastGetKeyTime = localStorage.getItem('lastGetKeyTime');
+            const currentTime = new Date().getTime();
+
+            if (lastGetKeyTime) {
+                const timeDiff = currentTime - lastGetKeyTime;
+                const cooldownTime = 24 * 60 * 60 * 1000; // 24 giờ
+
+                if (timeDiff < cooldownTime) {
+                    const remainingTime = cooldownTime - timeDiff;
+                    const remainingHours = Math.floor(remainingTime / (1000 * 60 * 60));
+                    const remainingMinutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                    countdownElement.textContent = `Bạn có thể lấy key sau: ${remainingHours} giờ ${remainingMinutes} phút`;
+                    getKeyButton.disabled = true;
+                } else {
+                    countdownElement.textContent = '';
+                    getKeyButton.disabled = false;
+                }
+            } else {
+                countdownElement.textContent = '';
+                getKeyButton.disabled = false;
+            }
+        }
+
+        // Bắt đầu đếm ngược 10 giây để lấy key
+        function startCooldown() {
+            let countdownValue = 10; // 10 giây đếm ngược
+            countdownElement.textContent = `Đếm ngược: ${countdownValue} giây`;
+
+            getKeyButton.disabled = true; // Disable nút get key trong quá trình đếm ngược
+
+            cooldownTimer = setInterval(() => {
+                countdownValue--;
+                countdownElement.textContent = `Đếm ngược: ${countdownValue} giây`;
+                if (countdownValue <= 0) {
+                    clearInterval(cooldownTimer);
+                    getKey();
+                }
+            }, 1000);
+        }
+
+        // Lấy key ngẫu nhiên sau khi đếm ngược kết thúc
+        function getKey() {
+            const key = generateRandomKey();
+            const currentDate = new Date().toLocaleString();
+            const keyData = {
+                key: key,
+                time: currentDate
+            };
+
+            // Lưu key và thời gian vào localStorage
+            localStorage.setItem('lastGetKeyTime', new Date().getTime());
+            localStorage.setItem('keyData', JSON.stringify(keyData));
+
+            // Hiển thị key và lịch sử
+            displayKey(key);
+            saveHistory(keyData);
+
+            // Ẩn textbox sau 5 giây
+            setTimeout(() => {
+                keyContainer.style.display = 'none';
+            }, 5000);
+
+            // Kiểm tra cooldown lại
+            checkCooldown();
+        }
+
+        // Tạo key ngẫu nhiên
+        function generateRandomKey() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = 'free_';
+            for (let i = 0; i < 20; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        // Hiển thị key trong textbox
+        function displayKey(key) {
+            keyInput.value = key;
+            keyContainer.style.display = 'block'; // Hiển thị textbox chứa key
+        }
+
+        // Sao chép key vào clipboard
+        function copyKey() {
+            keyInput.select();
+            document.execCommand('copy');
+        }
+
+        // Lưu lịch sử get key vào DOM
+        function saveHistory(keyData) {
+            const historyItem = document.createElement('div');
+            historyItem.innerHTML = `<strong>Key:</strong> ${keyData.key} <br><strong>Ngày Get Key:</strong> ${keyData.time}`;
+            historyElement.appendChild(historyItem);
+        }
+
+        // Kiểm tra cooldown khi tải trang
+        window.onload = function() {
+            checkCooldown();
+
+            const keyData = JSON.parse(localStorage.getItem('keyData'));
+            if (keyData) {
+                saveHistory(keyData);
+            }
+
+            // Kiểm tra xem có cần mật khẩu không
+            const passwordEnabled = localStorage.getItem('passwordEnabled');
+            if (passwordEnabled === 'true') {
+                resetTimeButton.disabled = false;
+            }
+        }
+
+        // Hiển thị dialog yêu cầu nhập mật khẩu
+        function showPasswordDialog() {
+            overlay.style.display = 'block';
+            passwordDialog.style.display = 'block';
+        }
+
+        // Xác nhận mật khẩu và lưu lại
+        function validatePassword() {
+            const enteredPassword = document.getElementById('password-input').value;
+            if (enteredPassword === correctPassword) {
+                localStorage.setItem('passwordEnabled', 'true');
+                resetTimeButton.disabled = false; // Enable nút reset thời gian
+                overlay.style.display = 'none';
+                passwordDialog.style.display = 'none';
+                alert('Mật khẩu đúng! Bạn có thể xóa thời gian đếm ngược.');
+            } else {
+                alert('Mật khẩu sai!');
+            }
+        }
+
+        // Reset thời gian và cho phép lấy key ngay
+        resetTimeButton.onclick = function() {
+            localStorage.removeItem('lastGetKeyTime'); // Xóa thời gian đếm ngược
+            checkCooldown(); // Cập nhật lại trạng thái cooldown
+            alert('Thời gian đã được reset, bạn có thể lấy key ngay lập tức.');
+        };
+    </script>
 </body>
 </html>
