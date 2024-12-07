@@ -128,7 +128,7 @@
         const passwordDialog = document.getElementById('password-dialog');
         const overlay = document.getElementById('overlay');
 
-        const correctPassword = 'AdminKeyTime';
+        const correctPassword = 'AdminKeyTime'; // Mật khẩu đúng
         let cooldownTimer;
 
         // Kiểm tra thời gian cooldown từ localStorage
@@ -203,7 +203,7 @@
         function generateRandomKey() {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = 'free_';
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 10; i++) {
                 result += characters.charAt(Math.floor(Math.random() * characters.length));
             }
             return result;
@@ -236,12 +236,6 @@
             if (keyData) {
                 saveHistory(keyData);
             }
-
-            // Kiểm tra xem có cần mật khẩu không
-            const passwordEnabled = localStorage.getItem('passwordEnabled');
-            if (passwordEnabled === 'true') {
-                resetTimeButton.disabled = false;
-            }
         }
 
         // Hiển thị dialog yêu cầu nhập mật khẩu
@@ -254,21 +248,19 @@
         function validatePassword() {
             const enteredPassword = document.getElementById('password-input').value;
             if (enteredPassword === correctPassword) {
-                localStorage.setItem('passwordEnabled', 'true');
-                resetTimeButton.disabled = false; // Enable nút reset thời gian
+                alert('Mật khẩu đúng! Bạn có thể xóa thời gian đếm ngược.');
+                localStorage.removeItem('lastGetKeyTime'); // Xóa thời gian đếm ngược
+                checkCooldown(); // Cập nhật lại trạng thái cooldown
                 overlay.style.display = 'none';
                 passwordDialog.style.display = 'none';
-                alert('Mật khẩu đúng! Bạn có thể xóa thời gian đếm ngược.');
             } else {
                 alert('Mật khẩu sai!');
             }
         }
 
-        // Reset thời gian và cho phép lấy key ngay
+        // Cập nhật lại trạng thái cooldown sau khi nhập mật khẩu đúng
         resetTimeButton.onclick = function() {
-            localStorage.removeItem('lastGetKeyTime'); // Xóa thời gian đếm ngược
-            checkCooldown(); // Cập nhật lại trạng thái cooldown
-            alert('Thời gian đã được reset, bạn có thể lấy key ngay lập tức.');
+            showPasswordDialog();
         };
     </script>
 </body>
